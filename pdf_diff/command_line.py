@@ -312,11 +312,12 @@ def draw_red_boxes(changes, pages, styles):
     for change in changes:
         if change == "*": continue # not handled yet
 
-        # 'box', 'strike', 'underline'
+        # 'box', 'strike', 'underline', 'highlight'
         style = styles[change["pdf"]["index"]]
 
         # the Image of the page
         im = pages[change["pdf"]["index"]][change["page"]]
+        #im.putalpha(1)
 
         # draw it
         draw = ImageDraw.Draw(im)
@@ -336,7 +337,25 @@ def draw_red_boxes(changes, pages, styles):
                 change["x"], change["y"]+change["height"],
                 change["x"]+change["width"], change["y"]+change["height"]
                 ), fill="red")
-
+        elif style == "highlight":
+            # require alpha composite
+            # https://stackoverflow.com/questions/43618910/pil-drawing-a-semi-transparent-square-overlay-on-image
+            
+            # first create a complete transparent (opaque = 0) image same size as pdf page
+            overlay = Image.new('RGBA', im.size, "#00000000")
+            # Create a context for drawing things on it.
+            draw_highlight = ImageDraw.Draw(overlay)  
+            # draw the highlight rectangle
+            draw_highlight.rectangle((
+                change["x"], change["y"],
+                (change["x"]+change["width"]), (change["y"]+change["height"]),
+                ), fill="#f6308e60")
+            # blend them
+            im.alpha_composite(overlay)
+                      
+            del draw_highlight     
+            
+        
         del draw
 
 def zealous_crop(page_groups):
@@ -454,7 +473,7 @@ def main():
                         help='calculate differences between the two named files')
     parser.add_argument('-c', '--changes', action='store_true', default=False, 
                         help='read change description from standard input, ignoring files')
-    parser.add_argument('-s', '--style', metavar='box|strike|underline,box|stroke|underline', 
+    parser.add_argument('-s', '--style', metavar='box|strike|underline|highlight,box|stroke|underline|highlight', 
                         default='strike,underline',
                         help='how to mark the differences in the two files (default: strike, underline)')
     parser.add_argument('-f', '--format', choices=['png','gif','jpeg','ppm','tiff'], default='png',
@@ -477,8 +496,8 @@ def main():
     if len(style) != 2:
         invalid_usage('Exactly two style values must be specified, if --style is used.')
     for i in [0,1]:
-        if style[i] != 'box' and style[i] != 'strike' and style[i] != 'underline':
-            invalid_usage('--style values must be box, strike or underline, not "%s".' % (style[i]))
+        if style[i] != 'box' and style[i] != 'strike' and style[i] != 'underline' and style[i] != 'highlight':
+            invalid_usage('--style values must be box, strike, highlight or underline, not "%s".' % (style[i]))
 
     # Ensure one of files or --changes are specified
     if len(args.files) == 0 and not args.changes:
