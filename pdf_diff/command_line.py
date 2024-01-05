@@ -77,12 +77,16 @@ def pdf_to_bboxes(pdf_index, fn, top_margin=0, bottom_margin=100):
             "width": float(page.get("width")),
             "height": float(page.get("height"))
         }
+        
         for word in page.findall("{http://www.w3.org/1999/xhtml}word"):
             if float(word.get("yMax")) < (top_margin/100.0)*float(page.get("height")):
                 continue
             if float(word.get("yMin")) > (bottom_margin/100.0)*float(page.get("height")):
                 continue
 
+            #print("width:", float(word.get("xMax"))-float(word.get("xMin")))
+            #print("height:", float(word.get("yMax"))-float(word.get("yMin")))
+            #print("text:", word.text)
             yield {
                 "index": box_index,
                 "pdf": pdfdict,
@@ -322,6 +326,16 @@ def draw_red_boxes(changes, pages, styles):
         # draw it
         draw = ImageDraw.Draw(im)
 
+        if change["width"] < 0:
+            change["x"] = change["x"] + change['width']
+            change["width"] = abs(change["width"])
+            
+        if change["height"] < 0:
+            change["y"] = change["y"] + change['height']
+            change["height"] = abs(change["height"])
+
+        #print(change["x"], change["width"], change["y"], change["height"], sep=",")
+        
         if style == "box":
             draw.rectangle((
                 change["x"], change["y"],
