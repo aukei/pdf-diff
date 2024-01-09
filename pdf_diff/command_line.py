@@ -343,8 +343,8 @@ def draw_red_boxes(changes, pages, styles):
                 ), outline="red")
         elif style == "strike":
             draw.line((
-                change["x"], change["y"]+change["height"]/2,
-                change["x"]+change["width"], change["y"]+change["height"]/2
+                change["x"], change["y"]+change["height"]*0.33,
+                change["x"]+change["width"], change["y"]+change["height"]*0.33
                 ), fill="red")
         elif style == "underline":
             draw.line((
@@ -528,8 +528,9 @@ def main():
         invalid_usage('Insufficient number of files to compare; please supply exactly 2.')
 
     changes = compute_changes(args.files[0], args.files[1], top_margin=float(args.top_margin), bottom_margin=float(args.bottom_margin))
-    img = render_changes(changes, style, args.result_width)
+    img = render_changes(changes, style, args.result_width).convert("RGB")
     img.save(sys.stdout.buffer, args.format.upper())
+    
 
 
 if __name__ == "__main__":
