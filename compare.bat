@@ -27,7 +27,7 @@ IF EXIST "%outfile%" (
   echo %outfile% not found - ok
 )
 
-CALL conda run -n pdfdiff compare.bat %1 %2 %3 RUN
+CALL conda run -n pdfdiff %0 %1 %2 %3 RUN
 GOTO END
 
 :EXEC
